@@ -342,6 +342,65 @@ function ModelLab() {
   </div>
 }
 
+function LoginPage() {
+  const nav = useNavigate()
+  const { login, register, isConfigured } = useAuth()
+  const [mode, setMode] = useState('login')
+  const [email, setEmail] = useState('')
+  const [pass, setPass] = useState('')
+  const [name, setName] = useState('')
+  const [error, setError] = useState('')
+
+  async function handleSubmit() {
+    if (!email || !pass) return setError('შეავსე ყველა ველი')
+    if (!isConfigured) return setError('Supabase არ არის დაკავშირებული')
+    try {
+      if (mode === 'login') await login(email, pass)
+      else await register(email, pass, name)
+      nav('/')
+    } catch (e) { setError(e.message) }
+  }
+
+  return <div className="page-enter">
+    <button className="back-btn" onClick={() => nav(-1)}>{t('match.back')}</button>
+    <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>
+      {mode === 'login' ? t('auth.login') : t('auth.register')}
+    </h2>
+    {error && <div style={{ color: 'var(--px-red)', fontSize: 12, marginBottom: 10 }}>{error}</div>}
+    <input className="input" type="email" placeholder={t('auth.login') + ' email'} value={email} onChange={e => setEmail(e.target.value)} style={{ marginBottom: 10 }} />
+    <input className="input" type="password" placeholder="პაროლი" value={pass} onChange={e => setPass(e.target.value)} style={{ marginBottom: 10 }} />
+    {mode === 'register' && <input className="input" type="text" placeholder="სახელი" value={name} onChange={e => setName(e.target.value)} style={{ marginBottom: 10 }} />}
+    <button className="btn btn-primary" onClick={handleSubmit}>{mode === 'login' ? t('auth.login') : t('auth.register')}</button>
+    <button className="btn btn-secondary" style={{ marginTop: 8 }} onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError('') }}>
+      {mode === 'login' ? t('auth.register') : 'უკვე მაქვს ანგარიში'}
+    </button>
+  </div>
+}
+
+function ProfilePage() {
+  const nav = useNavigate()
+  const { user, profile, logout } = useAuth()
+  if (!user) return <div className="page-enter">
+    <button className="back-btn" onClick={() => nav(-1)}>{t('match.back')}</button>
+    <div className="empty">{t('profile.notLoggedIn')}</div>
+    <button className="btn btn-primary" onClick={() => nav('/login')}>{t('auth.login')}</button>
+  </div>
+  return <div className="page-enter">
+    <button className="back-btn" onClick={() => nav(-1)}>{t('match.back')}</button>
+    <div style={{ textAlign: 'center', marginBottom: 16 }}>
+      <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'var(--px-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 700, margin: '0 auto' }}>{(profile?.display_name || 'U')[0].toUpperCase()}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, marginTop: 8 }}>{profile?.display_name || 'User'}</div>
+      <div style={{ fontSize: 12, color: 'var(--px-text3)' }}>{user.email}</div>
+    </div>
+    <div className="section-title">{t('profile.settings')}</div>
+    <div className="card">
+      <div className="stat-row"><span className="stat-label">ენა</span><span className="stat-value">ქართული</span></div>
+      <div className="stat-row"><span className="stat-label">ტაიმზონა</span><span className="stat-value">Asia/Tbilisi</span></div>
+    </div>
+    <button className="btn btn-danger" onClick={() => { logout(); nav('/') }} style={{ marginTop: 16 }}>{t('auth.logout')}</button>
+  </div>
+}
+
 function MorePage() {
   const nav = useNavigate()
   const { user, profile, logout } = useAuth()
@@ -389,6 +448,9 @@ export default function App() {
         <Route path="/team/:id" element={<TeamDetail />} />
         <Route path="/model" element={<ModelLab />} />
         <Route path="/more" element={<MorePage />} />
+        <Route path="/login" element={<LoginPage />} />
+<Route path="/profile" element={<ProfilePage />} />
+<Route path="/admin" element={<MorePage />} />
       </Routes>
     </div>
     <nav className="nav">
